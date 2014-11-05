@@ -2,7 +2,7 @@ def column(array, i):
     return [row[i] for row in array]
 
 
-class PicrossPuzzle:
+class PicrossPuzzle(object):
     """
         Picross Puzzle contains all methods for creating and
         Translating a puzzle from hints to solution. Intialized
@@ -15,27 +15,27 @@ class PicrossPuzzle:
             puzzle = [1]
             print error
 
-        self.solution  = puzzle
+        self.solution = puzzle
         self.size = len(puzzle)
         self.calculate_hints(puzzle)
 
-    def verify_puzzle( self, puzzle ):
+    def verify_puzzle(self, puzzle):
         for row in puzzle:
-            if len(row) != len( puzzle ):
-                raise NameError("Invalid puzzle, setting puzzle to simple case")
+            if len(row) != len(puzzle):
+                raise NameError("Invalid puzzle")
 
-    def calculate_hints( self, puzzle ):
+    def calculate_hints(self, puzzle):
         vertical_hints = []
         horizontal_hints = []
         temp_counter = 0
 
-        for row_index, row in enumerate( puzzle ):
+        for row_index, row in enumerate(puzzle):
             temp_counter = 0
             horizontal_hints.append([])
 
-            for column_index, column_val in enumerate( row ):
+            for column_index, column_val in enumerate(row):
                 if column_val > 0:
-                    temp_counter += 1 ;
+                    temp_counter += 1
 
                 if column_val == 0 and temp_counter > 0:
                     horizontal_hints[row_index].append(temp_counter)
@@ -52,11 +52,11 @@ class PicrossPuzzle:
         for column_index in range(len(puzzle)):
             temp_counter = 0
             vertical_hints.append([])
-            
+
             for row_index, row_val in enumerate([row[column_index] for row in puzzle]):
 
                 if row_val > 0:
-                    temp_counter += 1 ;
+                    temp_counter += 1
 
                 if row_val == 0 and temp_counter > 0:
                     vertical_hints[column_index].append(temp_counter)
@@ -71,14 +71,16 @@ class PicrossPuzzle:
         self.horizontal_hints = horizontal_hints
 
 
-
-
-
-
-some = PicrossPuzzle([[1,0,1],
-                      [0,1,0],
-                      [1,1,1]])
+some = PicrossPuzzle([[1, 0, 1],
+                      [0, 1, 0],
+                      [1, 1, 1]])
 print some.solution
 print some.horizontal_hints
 print some.vertical_hints
 
+array = [[1, 2, 3],
+         [4, 5, 6],
+         [7, 8, 9],
+         [1, 2, 3]]
+
+print [[array[y][x] for y in range(len(array))] for x in range(len(array[0]))]
