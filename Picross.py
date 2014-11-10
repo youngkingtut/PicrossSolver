@@ -1,33 +1,55 @@
-def column(array, i):
-    return [row[i] for row in array]
+__author__ = "Tristan Storz tristanstorz@gmail.com"
+__email__ = "tristanstorz@gmail.com"
+__status__ = "Development"
+__version__ = "0.1.1"
 
 
 class PicrossPuzzle(object):
     """
         Picross Puzzle contains all methods for creating and
-        Translating a puzzle from hints to solution. Intialized
-        with a equal size 2d array (initially).
+        Finding hints for a given puzzle. More puzzle formats
+        will be added at a later time. For now only a simple
+        2d square array is considered.
     """
     def __init__(self, puzzle):
+        """
+            Create class by inputting a 2 dimensional square list.
+            verify_puzzle is called to check for correct input.
+        """
+        self.puzzle = puzzle
+        self.size = len(self.puzzle)
+
         try:
-            self.verify_puzzle(puzzle)
+            self.verify_puzzle(self.puzzle)
         except NameError, error:
-            puzzle = [1]
+            self.puzzle = [[1, 1], [1, 1]]
             print error
 
-        self.solution = puzzle
-        self.size = len(puzzle)
-        self.calculate_hints(puzzle)
+        self.set_puzzle_hints(self.puzzle)
 
     def verify_puzzle(self, puzzle):
-        for row in puzzle:
-            if len(row) != len(puzzle):
-                raise NameError("Invalid puzzle")
+        """
+            Simple verfication. Throws a defined NameError if the
+            input list does not have equal columns and rows
+        """
+        for row in self.puzzle:
+            if len(row) != self.size:
+                raise NameError("Invalid puzzle, setting to simple case")
 
-    def calculate_hints(self, puzzle):
-        vertical_hints = []
+    def set_puzzle_hints(self, puzzle):
+        """
+            FInd hints for given puzzle. Hints are stored in
+            self.vertical_hints and self.horizontal_hints
+        """
+        transposed_puzzle = [[self.puzzle[y][x] for y in range(len(self.puzzle))] for x in range(len(self.puzzle[0]))]
+        self.horizontal_hints = self.get_horizontal_hints(self.puzzle)
+        self.vertical_hints = self.get_horizontal_hints(transposed_puzzle)
+
+    def get_horizontal_hints(self, puzzle):
+        """
+            Returns list of vertical hints
+        """
         horizontal_hints = []
-        temp_counter = 0
 
         for row_index, row in enumerate(puzzle):
             temp_counter = 0
@@ -45,42 +67,4 @@ class PicrossPuzzle(object):
                     if column_val > 0:
                         horizontal_hints[row_index].append(temp_counter)
                         temp_counter = 0
-
-            if len(horizontal_hints[row_index]) == 0:
-                horizontal_hints[row_index].append(0)
-
-        for column_index in range(len(puzzle)):
-            temp_counter = 0
-            vertical_hints.append([])
-
-            for row_index, row_val in enumerate([row[column_index] for row in puzzle]):
-
-                if row_val > 0:
-                    temp_counter += 1
-
-                if row_val == 0 and temp_counter > 0:
-                    vertical_hints[column_index].append(temp_counter)
-                    temp_counter = 0
-
-                if row_index == self.size - 1:
-                    if row_val > 0:
-                        vertical_hints[column_index].append(temp_counter)
-                        temp_counter = 0
-
-        self.vertical_hints = vertical_hints
-        self.horizontal_hints = horizontal_hints
-
-
-some = PicrossPuzzle([[1, 0, 1],
-                      [0, 1, 0],
-                      [1, 1, 1]])
-print some.solution
-print some.horizontal_hints
-print some.vertical_hints
-
-array = [[1, 2, 3],
-         [4, 5, 6],
-         [7, 8, 9],
-         [1, 2, 3]]
-
-print [[array[y][x] for y in range(len(array))] for x in range(len(array[0]))]
+        return horizontal_hints
