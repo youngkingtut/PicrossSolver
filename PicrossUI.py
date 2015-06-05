@@ -1,101 +1,96 @@
-import sys
 import pygame
-import time
-import Picross
-
-__author__ = "Tristan Storz tristanstorz@gmail.com"
-__email__ = "tristanstorz@gmail.com"
-__status__ = "Development"
-__version__ = "0.1.2"
-
-SCREEN_SIZE = 640, 640
-BLACK = 0, 0, 0
-MENU_COLOR = 150, 150, 150
-MENU_TEXT_COLOR = 0, 0, 0
-MENU_TEXT_BACKGROUND = 10, 50, 60
-MENU_TEXT_BACKGROUND_ACTIVE = 20, 80, 90
-MENU_FONT_SIZE = 36
-MENU_START = "START"
-MENU_OPTION = "OPTION"
-CAPTION = ("Picross: version: " + __version__)
-CAPTION_IMAGE = pygame.image.load("Picross.png")
-
-pygame.init()
-pygame.display.set_icon(CAPTION_IMAGE)
-pygame.display.set_caption(CAPTION)
+from gameconfig import GameConfig
+from layer import Layer
+from control import EventControl
 
 
-class Picross_Menu(pygame.Surface):
-    """docstring for Picross_Menu"""
-    def __init__(self, size):
-        super(Picross_Menu, self).__init__(size)
-        # TODO font size dependent on the size of the menu's surface
-        self.menu_font = pygame.font.SysFont("arial", 36)
-        self.center = ((self.get_width() / 2, self.get_height() / 2))
-        self.default_state_options = [Menu_Options(self.menu_font, "START"),
-                                      Menu_Options(self.menu_font, "OPTIONS")]
-        self.menu_default_state()
+class State(object):
+    def __init__(self, state_vars):
+        self.state_vars = state_vars
 
-    def menu_default_state(self):
-        self.fill(MENU_COLOR)
-        self.state_options = self.default_state_options
-        self.draw_menu(self.state_options)
+    def run(self):
+        return None
 
-    def draw_menu(self, menu_options):
-        for index, option in enumerate(menu_options):
-            left_align = self.center[0] - (option.size[0] / 2)
-            top_align = self.center[1] - (option.size[1] / 2) + index * option.size[1]
-            option.menu_position = (left_align, top_align)
-            self.blit(option.surface, option.menu_position)
 
-    def mouse_click(self, position):
-        for option in self.default_state_options:
-            if option.collidepoint(position):
-                option.change_state("ON")
+class StateHandler(object):
+    def __init__(self):
+        self.screen = None
+        self.current_state = None
+        self.state_vars = {}
+
+    def setup(self):
+        pygame.init()
+        pygame.display.set_caption(GameConfig.CAPTION)
+        self.current_state = GameMenu(self.state_vars)
+
+    def run_game(self):
+        while self.current_state:
+            current_state_object = self.current_state.run()
+            if not hasattr(current_state_object, '__call__'):
+                self.current_state = current_state_object
             else:
-                option.change_state("OFF")
+                self.current_state = current_state_object(self.screen, self.state_vars)
 
-        self.draw_menu(self.state_options)
+    @staticmethod
+    def teardown():
+        pygame.quit()
 
 
-class Menu_Options(object):
-    def __init__(self, menu_font, text):
-        self.font = menu_font
-        self.text = self.font.render(text, True, MENU_TEXT_COLOR)
+class GameMenu(State):
+    def __init__(self, *args, **kwargs):
+        State.__init__(self, *args, **kwargs)
+        self.surface = None
+        self.clock = None
+        self.controls = None
+        self.font = None
+        self.exit = False
+        self.buttons = None
+        self.setup()
+
+    def setup(self):
+        self.surface = Layer(GameConfig.SCREEN_SIZE)
+        self.surface.fill(GameConfig.MENU_COLOR)
+        self.clock = pygame.time.Clock()
+        self.controls = EventControl({
+            pygame.QUIT: self.quit,
+            pygame.MOUSEMOTION: self.mouse_movement_event
+        })
+        self.font = pygame.font.Font(None, GameConfig.MENU_FONT_SIZE)
+
+        self.buttons = [
+            Button("START", self.font, GameConfig.MENU_TEXT_COLOR, (40, 40)),
+            Button("OPTIONS", self.font, GameConfig.MENU_TEXT_COLOR, (40, 40)),
+            Button("EXIT", self.font, GameConfig.MENU_TEXT_COLOR, (40, 40)),
+
+        ]
+
+    def run(self):
+        while not self.exit:
+            self.clock.tick(GameConfig.FRAMES_PER_SECOND)
+            self.controls.poll_event()
+            self.draw_menu()
+            Layer.update()
+
+        return None
+
+    def draw_menu(self):
+        for button in self.buttons:
+            self.surface.blit(button.surface, button.position)
+
+    def mouse_movement_event(self, event):
+        for button in self.buttons:
+            if button.rect.collidepoint(event.pos):
+                print button.text
+
+    def quit(self, event):
+        self.exit = True
+
+
+class Button(object):
+    def __init__(self, text, font, color, position):
+        self.text = text
+        self.font = font
         self.size = self.font.size(text)
-        self.surface = pygame.Surface(self.size)
-        self.state = "OFF"
-        self.menu_position = (0, 0)
-        self.surface.fill(MENU_TEXT_BACKGROUND)
-        self.surface.blit(self.text, (0, 0))
-
-    def change_state(self, new_state):
-        if new_state is "OFF":
-            self.state = "OFF"
-            self.surface.fill(MENU_TEXT_BACKGROUND)
-            self.surface.blit(self.text, (0, 0))
-        else:
-            self.state = "ON"
-            self.surface.fill(MENU_TEXT_BACKGROUND_ACTIVE)
-            self.surface.blit(self.text, (0, 0))
-
-    def collidepoint(self, position):
-        rectangle = self.surface.get_rect()
-        rectangle.move_ip(self.menu_position)
-        return rectangle.collidepoint(position)
-
-screen = pygame.display.set_mode(SCREEN_SIZE)
-menu = Picross_Menu(screen.get_size())
-
-
-while True:
-    time.sleep(0.1)
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            sys.exit()
-        if event.type == pygame.MOUSEBUTTONDOWN:
-            if event.dict["button"] == 1:
-                menu.mouse_click(event.dict["pos"])
-
-    screen.blit(menu, (0, 0))
-    pygame.display.flip()
+        self.surface = self.font.render(text, True, color)
+        self.position = position
+        self.rect = self.surface.get_rect(left=position[0], top=position[1])

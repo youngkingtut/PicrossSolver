@@ -1,0 +1,18 @@
+class GameConfig(object):
+    SCREEN_SIZE = 640, 640
+    MENU_COLOR = 150, 150, 150
+    MENU_TEXT_COLOR = 0, 0, 0
+    MENU_TEXT_BACKGROUND = 10, 50, 60
+    MENU_TEXT_BACKGROUND_ACTIVE = 20, 80, 90
+    MENU_FONT_SIZE = 50
+    MENU_COLOR = (0, 0, 0)
+    MENU_TEXT_COLOR = (125, 124, 10)
+    MENU_TEXT_OFFSET = 10
+    CLEAN_SCREEN = (255, 255, 255)
+    CAPTION = "Picross"
+    CAPTION_IMAGE = "resources/Picross.png"
+    FRAMES_PER_SECOND = 60
+    UP = 273
+    DOWN = 274
+    RIGHT = 275
+    LEFT = 276
